@@ -1,0 +1,15 @@
+Fruits:
+@PARTPIPE@|sort
+Pineapple
+Banana
+Apple
+@PARTPIPE@
+
+Colors:
+@PARTPIPE@|sort|uniq
+Blue
+Red
+Green
+Red
+Blue
+@PARTPIPE@

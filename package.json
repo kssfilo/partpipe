@@ -1,0 +1,26 @@
+{
+  "name": "partpipe",
+  "description": "Command line filter to apply unix filter to parts of input stream.",
+  "main": "partpipe.js",
+  "bin": {
+    "partpipe": "./cli.js"
+  },
+  "__VERSION__": "@VERSION@",
+  "dependencies": {
+    "co": "^4.6.0",
+    "getopt": "^0.1.0"
+  },
+  "devDependencies": {
+    "coffee-jshint": "^0.2.6",
+    "coffee-script": "^1.12.4"
+  },
+  "tags": [],
+  "author": {
+    "name": "kssfilo"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/kssfilo/partpipe.git"
+  }
+}

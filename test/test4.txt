@@ -1,0 +1,1 @@
+Name:@PARTPIPE@|tr 'a' 'o';hage@PARTPIPE@ @PARTPIPE@|tr 'o' 'e';hoo@PARTPIPE@ aaa

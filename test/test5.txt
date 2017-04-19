@@ -1,0 +1,6 @@
+Indent:
+	  @PARTPIPE@|sort|sed 's/^[ 	]*//'
+	  Pineapple
+	  Banana
+	  Apple
+	  @PARTPIPE@

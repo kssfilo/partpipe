@@ -1,0 +1,6 @@
+Fruits:
+=ANOTHERMARK=|sort
+Pineapple
+Banana
+Apple
+=ANOTHERMARK=
