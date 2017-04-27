@@ -7,9 +7,11 @@ escapeRegExp=(str)->
 	str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
 
 partpipe=(input,options={})->
-	{marker='@PARTPIPE@',debugConsole=null,processIndent=true}=options
+	{tags={},marker='@PARTPIPE@',debugConsole=null,processIndent=true}=options
 
 	debugConsole? "marker:#{marker}"
+	debugConsole? "processIndent:#{processIndent}" 
+	debugConsole? "tags:#{JSON.stringify tags}" 
 
 	inputLines=input.split "\n"
 
@@ -32,12 +34,17 @@ partpipe=(input,options={})->
 
 		for line in inputLines
 			lineno++
-			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}\\|?([^;]*)$")
+			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}([|=])?([^;]*)$")
+			if m?[2] is '=' and !tags.hasOwnProperty(m?[3])
+				debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{m[3]}=sort'"
+				m=null
+
 			switch
-				when m and state is 'bypass'
+				when m and state is 'bypass' and m[2] in ['|','=']
 					debugConsole? "found beginnning marker at line #{lineno}"
 					state='buffering'
-					commandLine=m[2]
+					commandLine=m[3]
+					commandLine=tags[m[3]] if m[2] is '=' 
 					indent=m[1]
 					buffer=''
 				when m and state is 'buffering'
@@ -67,12 +74,23 @@ partpipe=(input,options={})->
 					buffer+="#{line}\n"
 				else
 					loop
-						inlineRegexp=new RegExp("#{escapeRegExp(marker)}\\|([^;]+);(.*?)#{escapeRegExp(marker)}")
+						emarker=marker+Math.floor(Math.random()*1000000)
+						break unless line.match emarker
+
+					loop
+						inlineRegexp=new RegExp("#{escapeRegExp(marker)}([|=])([^;]+);(.*?)#{escapeRegExp(marker)}")
 						mi=line.match inlineRegexp
+
+						if mi?[1] is '=' and !tags.hasOwnProperty(mi[2])
+							debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{mi[2]}=sort'"
+							line=line.replace inlineRegexp,"#{emarker}#{mi[1]}#{mi[2]};#{mi[3]}#{emarker}"
+							continue
+
 						if mi
 							debugConsole? "found inline marker at line #{lineno}"
-							commandLine=mi[1]
-							buffer=mi[2]
+							commandLine=mi[2]
+							commandLine=tags[mi[2]] if mi[1] is '=' 
+							buffer=mi[3]
 							debugConsole? """
 								command:#{commandLine}
 								buffer:#{buffer}
@@ -82,6 +100,8 @@ partpipe=(input,options={})->
 							line=line.replace inlineRegexp,commandOutput.replace /\n$/,''
 						else
 							break
+
+					line=line.replace new RegExp(escapeRegExp(emarker),'g'),marker
 
 					output+="#{line}\n"
 

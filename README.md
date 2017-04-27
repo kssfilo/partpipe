@@ -1,7 +1,7 @@
 partpipe
 ==========
 
-Applying unix filter to parts of input stream.
+Command line tool to apply unix filter to parts of input stream.
 
 ```
 >cat some.js
@@ -42,6 +42,29 @@ Red
 `;
 ```
 
+Able to specify filter in command line (tag mode, use = instead of |)
+
+```
+>cat some.js
+
+var html=`
+@PARTPIPE@=MARKDOWN
+# Hello World
+This is a greeting application.
+@PARTPIPE@
+`;
+```
+
+```
+>cat some.js|partpipe 'MARKDOWN=md2html'
+
+var html=`
+<h1>Hello World</h1>
+
+<p>This is a greeting application.</p>
+`;
+```
+
 ## Install
 
 ```
@@ -73,4 +96,5 @@ partpipe(input).then((result)=>console.log(result));
 
 ## Change Log
 
+- 0.2.x:added tag mode(@PARTPIPE@=TAG)
 - 0.1.x:first release
