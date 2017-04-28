@@ -65,6 +65,22 @@ var html=`
 `;
 ```
 
+Inline
+
+```
+>cat example.text
+
+Name: @PARTPIPE@|sed 's/World/Earth/';Hello World@PARTPIPE@
+Date: @PARTPIPE@|date;@PARTPIPE@
+Name2: @PARTPIPE@=HELLO;Hello World@PARTPIPE@
+
+>cat example.text|partpipe 'HELLO=sed "s/Hello/Good Night/"'
+
+Name: Hello Earth
+Date: Sat Apr 29 06:20:08 JST 2017
+Name2: Good Night World
+```
+
 ## Install
 
 ```
