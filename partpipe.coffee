@@ -123,10 +123,15 @@ partpipe=(input,options={})->
 								command:#{commandLine}
 								buffer:#{buffer}
 							"""
-							if commandLine is 'cat'
-								commandOutput=buffer
-							else
-								commandOutput=yield runProcessWithInjection(commandLine,buffer)
+							switch commandLine
+								when 'cat'
+									debugConsole? "command line is cat, bypassing content"
+									commandOutput=buffer
+								when ''
+									debugConsole? "command line is null, removing content"
+									commandOutput=''
+								else
+									commandOutput=yield runProcessWithInjection(commandLine,buffer)
 							debugConsole? "command output:#{commandOutput}"
 							line=line.replace inlineRegexp,commandOutput.replace /\n$/,''
 						else
