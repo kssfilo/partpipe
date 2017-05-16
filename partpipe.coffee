@@ -32,11 +32,15 @@ partpipe=(input,options={})->
 		state='bypass'
 		output=''
 		lineno=0
+		beginningLineno=0
 
 		for line in inputLines
 			lineno++
 			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}([|=])?([^;]*)$")
+			throw "Missing block seperator #{marker} for line #{beginningLineno}" if m and m[2] and state is 'buffering'
+
 			if m?[2] is '=' and !tags.hasOwnProperty(m?[3])
+
 				switch unknownTag
 					when 'remove'
 						debugConsole? "Removing uknown tag '#{m[3]}'"
@@ -57,7 +61,9 @@ partpipe=(input,options={})->
 					commandLine='' if m[2] is 'x'
 					indent=m[1]
 					buffer=''
+					beginningLineno=lineno
 				when m and state is 'buffering'
+
 					debugConsole? "found end marker at line #{lineno}"
 					state='bypass'
 					debugConsole? """
@@ -125,6 +131,7 @@ partpipe=(input,options={})->
 
 					output+="#{line}\n"
 
+		throw "Missing block seperator #{marker} for line #{beginningLineno}" if state is 'buffering'
 		return output
 
 module.exports=partpipe

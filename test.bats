@@ -49,3 +49,11 @@
 @test "-s option(multiline)" {
 	[ "$(cat test/test6.txt|dist/cli.js -s 'Fluits='|dist/cli.js |tr "\n" 'x')" = "Tag:x=xRedxBluexGreenx" ]
 }
+
+@test "Missing end seperator 1" {
+	[ "$(cat test/test8.txt|dist/cli.js -s 2>&1)" = "Missing block seperator @PARTPIPE@ for line 2" ]
+}
+
+@test "Missing end seperator 2" {
+	[ "$(cat test/test9.txt|dist/cli.js -s 2>&1)" = "Missing block seperator @PARTPIPE@ for line 8" ]
+}

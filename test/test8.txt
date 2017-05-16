@@ -1,0 +1,11 @@
+Tag:
+@PARTPIPE@=Fluits
+Banana
+Apple
+Banana
+=
+@PARTPIPE@=Colors
+Red
+Blue
+Green
+@PARTPIPE@
