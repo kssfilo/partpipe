@@ -133,3 +133,4 @@ switch command
 				process.stdout.write r
 			.catch (e)->
 				E e
+				process.exit 1
