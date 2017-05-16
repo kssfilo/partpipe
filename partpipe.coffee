@@ -7,11 +7,12 @@ escapeRegExp=(str)->
 	str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
 
 partpipe=(input,options={})->
-	{tags={},marker='@PARTPIPE@',debugConsole=null,processIndent=true}=options
+	{tags={},marker='@PARTPIPE@',debugConsole=null,processIndent=true,unknownTag='bypass'}=options
 
 	debugConsole? "marker:#{marker}"
-	debugConsole? "processIndent:#{processIndent}" 
-	debugConsole? "tags:#{JSON.stringify tags}" 
+	debugConsole? "processIndent:#{processIndent}"
+	debugConsole? "tags:#{JSON.stringify tags}"
+	debugConsole? "unknownTag:#{unknownTag}"
 
 	inputLines=input.split "\n"
 
@@ -36,26 +37,37 @@ partpipe=(input,options={})->
 			lineno++
 			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}([|=])?([^;]*)$")
 			if m?[2] is '=' and !tags.hasOwnProperty(m?[3])
-				debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{m[3]}=sort'"
-				m=null
-
+				switch unknownTag
+					when 'remove'
+						debugConsole? "Removing uknown tag '#{m[3]}'"
+						m[2]='x'
+					when 'show'
+						debugConsole? "Showing uknown tag '#{m[3]}'"
+						m[2]='|'
+						m[3]='cat'
+					else
+						debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{m[3]}=sort'"
+						m=null
 			switch
-				when m and state is 'bypass' and m[2] in ['|','=']
+				when m and state is 'bypass' and m[2] in ['|','=','x']
 					debugConsole? "found beginnning marker at line #{lineno}"
 					state='buffering'
 					commandLine=m[3]
-					commandLine=tags[m[3]] if m[2] is '=' 
+					commandLine=tags[m[3]] if m[2] is '='
+					commandLine='' if m[2] is 'x'
 					indent=m[1]
 					buffer=''
 				when m and state is 'buffering'
 					debugConsole? "found end marker at line #{lineno}"
 					state='bypass'
 					debugConsole? """
-						command:#{commandLine}
+						command:#{if commandLine is '' then 'REMOVE' else commandLine}
 						indent:#{indent.length}
 						###
 						#{buffer}###
 					"""
+
+					break if commandLine is ''
 
 					commandOutput=yield runProcessWithInjection(commandLine,buffer)
 					commandOutput=commandOutput.replace /\n$/m,""
@@ -82,8 +94,16 @@ partpipe=(input,options={})->
 						mi=line.match inlineRegexp
 
 						if mi?[1] is '=' and !tags.hasOwnProperty(mi[2])
-							debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{mi[2]}=sort'"
-							line=line.replace inlineRegexp,"#{emarker}#{mi[1]}#{mi[2]};#{mi[3]}#{emarker}"
+							switch unknownTag
+								when 'remove'
+									debugConsole? "Removing uknown tag '#{mi[2]}'"
+									line=line.replace inlineRegexp,""
+								when 'show'
+									debugConsole? "Showing uknown tag '#{mi[2]}'"
+									line=line.replace inlineRegexp,"#{mi[3]}"
+								else
+									debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{mi[2]}=sort'"
+									line=line.replace inlineRegexp,"#{emarker}#{mi[1]}#{mi[2]};#{mi[3]}#{emarker}"
 							continue
 
 						if mi

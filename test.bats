@@ -31,3 +31,21 @@
 @test "Inline Tag" {
 	[ "$(cat test/test7.txt|dist/cli.js 'Tag1=sed "s/o/a/"'|dist/cli.js 'Tag2=sed "s/o/u/g"'|tr "\n" 'x')" = "Name:hage huu aaax" ]
 }
+
+@test "-c option(inline)" {
+	[ "$(cat test/test7.txt|dist/cli.js -c Tag2=cat |tr "\n" 'x')" = "Name: hoo aaax" ]
+
+}
+
+@test "-s option(inline)" {
+	[ "$(cat test/test7.txt|dist/cli.js -s Tag2= |tr "\n" 'x')" = "Name:hage  aaax" ]
+
+}
+
+@test "-c option(multiline)" {
+	[ "$(cat test/test6.txt|dist/cli.js -c 'Fluits=cat'|dist/cli.js |tr "\n" 'x')" = "Tag:xBananaxApplexBananax=x" ]
+}
+
+@test "-s option(multiline)" {
+	[ "$(cat test/test6.txt|dist/cli.js -s 'Fluits='|dist/cli.js |tr "\n" 'x')" = "Tag:x=xRedxBluexGreenx" ]
+}

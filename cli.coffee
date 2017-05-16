@@ -5,6 +5,7 @@ debugConsole=null
 marker=null
 command='normal'
 processIndent=true
+unknownTag='bypass'
 tags={}
 
 readline=require('readline').createInterface
@@ -15,7 +16,7 @@ E=console.error
 
 appName=require('path').basename process.argv[1]
 
-opt.setopt 'hdf:i'
+opt.setopt 'hdf:ics'
 opt.getopt (o,p)->
 	switch o
 		when 'h','?'
@@ -26,6 +27,10 @@ opt.getopt (o,p)->
 			marker=p[0]
 		when 'i'
 			processIndent=false
+		when 'c'
+			unknownTag='remove'
+		when 's'
+			unknownTag='show'
 
 params=opt.params().splice 1
 params.forEach (p)->
@@ -48,6 +53,8 @@ switch command
 			-d:debug
 			-f<string>:use <string> as block seperator(default:@PARTPIPE@)
 			-i:don't process indents
+			-c:remove unknown tag
+			-s:bypass unknown tag
 
 		example:
 			>cat example.js
@@ -75,7 +82,7 @@ switch command
 
 			Name: Hellow Earth
 
-		tag (specify filter in command line,use = instead of |):
+		tag:(specify filter in command line,use = instead of |):
 			>cat example.js
 
 			var html=`
@@ -91,6 +98,24 @@ switch command
 			<H1>Hello World</H1>
 			<p>This is a greeting application.</p>
 			`;
+
+		show/remove by tag:
+			>cat example.js
+
+			@PARTPIPE@=RELEASE;console.log('release build');@PARTPIPE@
+			@PARTPIPE@=DEBUG;console.log('debug build');@PARTPIPE@
+
+			>cat example.js|partpipe -c RELEASE=cat
+
+			console.log('release build');
+
+			>cat example.js|partpipe -c DEBUG=cat
+
+			console.log('debug build');
+
+			>cat example.js|partpipe RELESE= DEBUG=cat
+
+			console.log('debug build');
 		"""
 		process.exit 0
 	else
@@ -103,6 +128,7 @@ switch command
 				marker:marker
 				processIndent:processIndent
 				tags:tags
+				unknownTag:unknownTag
 			.then (r)->
 				process.stdout.write r
 			.catch (e)->

@@ -81,6 +81,23 @@ Date: Sat Apr 29 06:20:08 JST 2017
 Name2: Good Night World
 ```
 
+Show/Remove by tag(-c option:remove unknown tag)
+
+```
+>cat example.js
+
+@PARTPIPE@=RELEASE;console.log('release build');@PARTPIPE@
+@PARTPIPE@=DEBUG;console.log('debug build');@PARTPIPE@
+
+>cat example.js|partpipe -c RELEASE=cat
+
+console.log('release build');
+
+>cat example.js|partpipe -c DEBUG=cat
+
+console.log('debug build');
+```
+
 ## Install
 
 ```
@@ -112,5 +129,6 @@ partpipe(input).then((result)=>console.log(result));
 
 ## Change Log
 
+- 0.3.x:added -s/-c option
 - 0.2.x:added tag mode(@PARTPIPE@=TAG)
 - 0.1.x:first release
