@@ -74,8 +74,10 @@ partpipe=(input,options={})->
 					"""
 
 					break if commandLine is ''
-
-					commandOutput=yield runProcessWithInjection(commandLine,buffer)
+					if commandLine is 'cat'
+						commandOutput=buffer
+					else
+						commandOutput=yield runProcessWithInjection(commandLine,buffer)
 					commandOutput=commandOutput.replace /\n$/m,""
 					debugConsole? """
 					command output:
@@ -121,7 +123,10 @@ partpipe=(input,options={})->
 								command:#{commandLine}
 								buffer:#{buffer}
 							"""
-							commandOutput=yield runProcessWithInjection(commandLine,buffer)
+							if commandLine is 'cat'
+								commandOutput=buffer
+							else
+								commandOutput=yield runProcessWithInjection(commandLine,buffer)
 							debugConsole? "command output:#{commandOutput}"
 							line=line.replace inlineRegexp,commandOutput.replace /\n$/,''
 						else
