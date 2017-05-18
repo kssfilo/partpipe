@@ -50,6 +50,19 @@
 	[ "$(cat test/test6.txt|dist/cli.js -s 'Fluits='|dist/cli.js |tr "\n" 'x')" = "Tag:x=xRedxBluexGreenx" ]
 }
 
+@test "cat/drop shorthand" {
+	[ "$(cat test/test7.txt|dist/cli.js Tag1@ Tag2 |tr "\n" 'x')" = "Name: hoo aaax" ]
+
+}
+
+@test "echo shorthand" {
+	[ "$(cat test/test7.txt|dist/cli.js Tag1@hoge Tag2@moga |tr "\n" 'x')" = "Name:hoge moga aaax" ]
+}
+
+@test "echo shorthand2" {
+	[ "$(cat test/test10.txt |./cli.coffee Tag1@fuga Tag2@hoge Tag3@ Tag4|tr "\n" 'x')" = "Name:fuga hoge aaaxxxWORLDx" ]
+}
+
 @test "Missing end seperator 1" {
 	[ "$(cat test/test8.txt|dist/cli.js -s 2>&1)" = "Missing block seperator @PARTPIPE@ for line 2" ]
 }

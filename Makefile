@@ -1,7 +1,7 @@
 .SUFFIXES:
 
 APPNAME=partpipe
-VERSION=0.3.5
+VERSION=0.4.0
 
 #=
 
@@ -21,11 +21,11 @@ TOOLS=node_modules/.bin
 
 .PHONY:$(COMMANDS)
 
-pack:$(ALL)|$(DESTDIR)
-
-test:$(TARGETS) test.bats
+test:$(ALL) test.bats
 	chmod +x dist/cli.js
 	./test.bats
+
+pack:$(ALL)|$(DESTDIR)
 
 clean:
 	-rm -r $(DESTDIR) node_modules

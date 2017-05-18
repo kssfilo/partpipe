@@ -34,8 +34,19 @@ opt.getopt (o,p)->
 
 params=opt.params().splice 1
 params.forEach (p)->
-	m=p.match /^([^=]+)=(.*)/
-	tags[m[1]]=m[2] if m
+	m=p.match /^([^@=]+)@(.*)$/
+	if m
+		if m[2]
+			tags[m[1]]="echo #{m[2]}"
+		else
+			tags[m[1]]=""
+	else
+		m=p.match /^([^@=]+)=(.*)$/
+		if m
+			tags[m[1]]=m[2] if m
+		else
+			if p.match /^([^@=]+)$/
+				tags[p]='cat'
 
 switch command
 	when 'usage'
@@ -82,11 +93,11 @@ switch command
 
 			Name: Hellow Earth
 
-		tag:(specify filter in command line,use = instead of |):
+		tag:(specify filter in command line,remove |):
 			>cat example.js
 
 			var html=`
-			@PARTPIPE@=MARKDOWN
+			@PARTPIPE@MARKDOWN
 			# Hello World
 			This is a greeting application.
 			@PARTPIPE@
@@ -99,23 +110,32 @@ switch command
 			<p>This is a greeting application.</p>
 			`;
 
-		show/remove by tag:
+		show/remove by tag
 			>cat example.js
 
-			@PARTPIPE@=RELEASE;console.log('release build');@PARTPIPE@
-			@PARTPIPE@=DEBUG;console.log('debug build');@PARTPIPE@
+			@PARTPIPE@RELEASE;console.log('release build');@PARTPIPE@
+			@PARTPIPE@DEBUG;console.log('debug build');@PARTPIPE@
 
-			>cat example.js|partpipe -c RELEASE=cat
+			>cat example.js|partpipe -c RELEASE  #-c option:remove unknown tag/<tag>:just show content
 
 			console.log('release build');
 
-			>cat example.js|partpipe -c DEBUG=cat
+			>cat example.js|partpipe -c DEBUG
 
 			console.log('debug build');
 
-			>cat example.js|partpipe RELESE= DEBUG=cat
+			>cat example.js|partpipe RELESE@ DEBUG  # <tag>@:remove
 
 			console.log('debug build');
+
+		replace by tag
+			>cat example.js
+
+			console.log("version is @PARTPIPE@VERSION@PARTPIPE@");
+
+			>cat example.js|partpipe VERSION@1.2.0  #<tag>@<text> replace with <text>
+			console.log('version is 1.2.0');
+
 		"""
 		process.exit 0
 	else

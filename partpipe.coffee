@@ -18,6 +18,19 @@ partpipe=(input,options={})->
 
 	runProcessWithInjection=(commandLine,buffer)->
 		new Promise (rv,rj)->
+			switch commandLine
+				when 'cat'
+					debugConsole? "command line is cat, bypassing content"
+					return rv(buffer)
+				when ''
+					debugConsole? "command line is null, removing content"
+					return rv()
+				else
+					isEcho=commandLine.match /^echo (.*)$/
+					if isEcho
+						debugConsole? "command line is echo, overwriting content with #{isEcho[1]}"
+						return rv(isEcho[1])
+
 			p=child_process.exec commandLine,(err,stdout,stderr)->
 				if err
 					rj(stderr)
@@ -36,8 +49,10 @@ partpipe=(input,options={})->
 
 		for line in inputLines
 			lineno++
-			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}([|=])?([^;]*)$")
-			throw "Missing block seperator #{marker} for line #{beginningLineno}" if m and m[2] and state is 'buffering'
+			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}([|=]?)([^;]*)$")
+			throw "Missing block seperator #{marker} for line #{beginningLineno}" if m and m[3] and state is 'buffering'
+
+			m[2]='=' if m and m[3] and m[2] is ''
 
 			if m?[2] is '=' and !tags.hasOwnProperty(m?[3])
 
@@ -73,11 +88,8 @@ partpipe=(input,options={})->
 						#{buffer}###
 					"""
 
-					break if commandLine is ''
-					if commandLine is 'cat'
-						commandOutput=buffer
-					else
-						commandOutput=yield runProcessWithInjection(commandLine,buffer)
+					commandOutput=yield runProcessWithInjection(commandLine,buffer)
+					continue unless commandOutput
 					commandOutput=commandOutput.replace /\n$/m,""
 					debugConsole? """
 					command output:
@@ -94,44 +106,39 @@ partpipe=(input,options={})->
 					buffer+="#{line}\n"
 				else
 					loop
-						emarker=marker+Math.floor(Math.random()*1000000)
+						emarker="@#{Math.floor(Math.random()*10000000)}@"
 						break unless line.match emarker
 
 					loop
-						inlineRegexp=new RegExp("#{escapeRegExp(marker)}([|=])([^;]+);(.*?)#{escapeRegExp(marker)}")
+						inlineRegexp=new RegExp("#{escapeRegExp(marker)}([|=]?)([^;]+?)(;.*?)?#{escapeRegExp(marker)}")
 						mi=line.match inlineRegexp
-
-						if mi?[1] is '=' and !tags.hasOwnProperty(mi[2])
-							switch unknownTag
-								when 'remove'
-									debugConsole? "Removing uknown tag '#{mi[2]}'"
-									line=line.replace inlineRegexp,""
-								when 'show'
-									debugConsole? "Showing uknown tag '#{mi[2]}'"
-									line=line.replace inlineRegexp,"#{mi[3]}"
-								else
-									debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{mi[2]}=sort'"
-									line=line.replace inlineRegexp,"#{emarker}#{mi[1]}#{mi[2]};#{mi[3]}#{emarker}"
-							continue
-
 						if mi
+							mi[1]='=' if mi?[1] is ''
+							mi[3]=mi[3]?.replace(/^;/,'') ? ''
+
+							if mi?[1] is '=' and !tags.hasOwnProperty(mi[2])
+								switch unknownTag
+									when 'remove'
+										debugConsole? "Removing uknown tag '#{mi[2]}'"
+										line=line.replace inlineRegexp,""
+									when 'show'
+										debugConsole? "Showing uknown tag '#{mi[2]}'"
+										line=line.replace inlineRegexp,"#{mi[3]}"
+									else
+										debugConsole? "Unknown tag found on line #{lineno}.Specify in cmdline like '#{mi[2]}=sort'"
+										line=line.replace inlineRegexp,"#{emarker}#{mi[1]}#{mi[2]};#{mi[3] ? ''}#{emarker}"
+								continue
+
 							debugConsole? "found inline marker at line #{lineno}"
 							commandLine=mi[2]
-							commandLine=tags[mi[2]] if mi[1] is '=' 
+							commandLine=tags[mi[2]] if mi[1] is '='
 							buffer=mi[3]
 							debugConsole? """
 								command:#{commandLine}
 								buffer:#{buffer}
 							"""
-							switch commandLine
-								when 'cat'
-									debugConsole? "command line is cat, bypassing content"
-									commandOutput=buffer
-								when ''
-									debugConsole? "command line is null, removing content"
-									commandOutput=''
-								else
-									commandOutput=yield runProcessWithInjection(commandLine,buffer)
+							commandOutput=yield runProcessWithInjection(commandLine,buffer)
+							commandOutput=commandOutput ? ''
 							debugConsole? "command output:#{commandOutput}"
 							line=line.replace inlineRegexp,commandOutput.replace /\n$/,''
 						else
