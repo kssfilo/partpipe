@@ -12,7 +12,7 @@ processIndent=true
 unknownTag='bypass'
 markReplace="="
 markCommand="@"
-defaultMarker="@@@@|@@@@"
+defaultMarker="@@@@@"
 targetDir=null
 targetFiles=null
 tags={}
@@ -77,7 +77,6 @@ D "markReplace:#{markReplace}"
 D "markCommand:#{markCommand}"
 D "targetDir:#{targetDir}"
 D "targetFiles:#{targetFiles}"
-D "="
 
 i=0
 loop
@@ -101,10 +100,12 @@ loop
 D "tags:#{JSON.stringify tags}"
 
 inputFiles=[process.stdin]
-if params.slice(i).length>0
-	inputFiles=params.slice i
+if params.slice(i+1).length>0
+	inputFiles=params.slice i+1
 
-D "input files #{if typeof inputFiles=='object' then 'stdin' else i for i in inputFiles}"
+D "input files #{if typeof i!='string' then 'stdin' else i for i in inputFiles}"
+
+D "start processing"
 
 switch command
 	when 'usage'
@@ -197,10 +198,15 @@ switch command
 		rl=require 'readline'
 		pp=require './partpipe'
 
+		sid2name=(sid)=>
+			x=inputFiles[sid]
+			x='stdin' if typeof x isnt 'string'
+			x
+
 		try
 			lineCallback=(sid,line)->inputLines[sid].push line
 			closeCallback=(sid)->
-				D "stream #{sid}:closed"
+				D "stream #{sid2name sid}:closed"
 				try
 					pp inputLines[sid].join("\n"),
 						debugConsole:debugConsole
@@ -212,14 +218,11 @@ switch command
 						process.stdout.write r
 						streamClosed null,sid
 					.catch (e)->
-						streamClosed "abort:#{sid}:#{e.toString()}",sid
+						streamClosed "abort:#{sid2name sid}:#{e.toString()}",sid
 				catch e
-					E "CHECK1"
-					streamClosed "abort:#{sid}:#{e.toString()}",sid
+					streamClosed "abort:#{sid2name sid}:#{e.toString()}",sid
 
 				return
-
-
 
 			numClosed=0
 			numError=0
@@ -248,7 +251,7 @@ switch command
 				input=if typeof inputFile is 'string' then fs.createReadStream input else input
 
 				readline=rl.createInterface
-					input:process.stdin
+					input:input
 
 				readline.on 'line',lineCallback.bind null,number
 				readline.on 'close',closeCallback.bind null,number

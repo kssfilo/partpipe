@@ -5,7 +5,7 @@ VERSION=1.0.0
 
 #=
 
-COMMANDS=help build pack test clean
+COMMANDS=help build pack test clean test-classic test-main
 
 #=
 
@@ -23,9 +23,17 @@ TOOLS=node_modules/.bin
 
 build:$(TARGETS)
 
-test:$(ALL) test.bats
-	chmod +x dist/cli.js
+test:test-classic test-main
+
+test-main:test/.ready
 	./test.bats
+
+test/.ready:
+	cd $(@D);for i in test*.txt;do cat $$i|perl -pe 's/\@PARTPIPE\@=?/@@@@@/g' >c-$$i;done
+	touch $@
+
+test-classic:$(ALL)
+	./test-classic.bats
 
 pack:$(ALL)|$(DESTDIR)
 
@@ -54,6 +62,10 @@ ifndef NC
 endif
 	head -n1 $<|grep '^#!'|sed 's/coffee/node/'  >$@ 
 	cat $<|$(TOOLS)/coffee -bcs >> $@
+ifeq ("$*","cli")
+	chmod +x $@
+endif
+
 
 $(DESTDIR)/%:%|$(DESTDIR)
 	cp $< $@
@@ -61,3 +73,4 @@ $(DESTDIR)/%:%|$(DESTDIR)
 $(SDK):package.json
 	npm install
 	@touch $@
+
