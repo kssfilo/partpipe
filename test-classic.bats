@@ -17,7 +17,7 @@
 }
 
 @test "Keeping Indent(off)" {
-	[ "$(cat test/test5.txt|dist/cli.js -C  -i|tr "\n" 'x'|tr "\t" 'y')" = "Indent:xApplexBananaxPineapplex" ]
+	[ "$(cat test/test5.txt|dist/cli.js -C  -I|tr "\n" 'x'|tr "\t" 'y')" = "Indent:xApplexBananaxPineapplex" ]
 }
 
 @test "Tag" {

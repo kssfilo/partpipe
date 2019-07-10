@@ -5,7 +5,7 @@ VERSION=1.0.0
 
 #=
 
-COMMANDS=help build pack test clean test-classic test-main
+COMMANDS=help build pack test clean 
 
 #=
 
@@ -23,22 +23,27 @@ TOOLS=node_modules/.bin
 
 build:$(TARGETS)
 
-test:test-classic test-main
+test:test-main.passed
 
-test-main:test/.ready
+test.passed:test-main.passed test-classic.passed
+	touch $@
+
+test-main.passed:test/.ready $(TARGETS)
 	./test.bats
+	touch $@
 
 test/.ready:
 	cd $(@D);for i in test*.txt;do cat $$i|perl -pe 's/\@PARTPIPE\@=?/@@@@@/g' >c-$$i;done
 	touch $@
 
-test-classic:$(ALL)
+test-classic.passed:$(TARGETS)
 	./test-classic.bats
+	touch $@
 
-pack:$(ALL)|$(DESTDIR)
+pack:$(ALL) test.passed|$(DESTDIR)
 
 clean:
-	-rm -r $(DESTDIR) node_modules
+	-rm -r $(DESTDIR) node_modules *.passd
 
 help:
 	@echo "Targets:$(COMMANDS)"

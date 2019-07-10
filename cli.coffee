@@ -2,6 +2,7 @@
 
 opt=require '@kssfilo/getopt'
 fs=require 'fs'
+path=require 'path'
 
 stdinWriteFileName='partipe.out'
 
@@ -14,28 +15,39 @@ markReplace="="
 markCommand="@"
 defaultMarker="@@@@@"
 targetDir=null
-targetFiles=null
+targetFile=null
+inputFiles=null
 tags={}
 
 T=console.log
 E=console.error
 D=(str)=>debugConsole "partpipe:"+str if debugConsole
 
-appName=require('path').basename process.argv[1]
+appName=path.basename process.argv[1]
 
 optUsages=
 	h:"show this usage"
 	d:"debug mode"
+	o:["filename","destination file name(default:stdout). use -O in multi-file mode"]
+	O:["dirname","destination dir.file name will be same as input filename or #{stdinWriteFileName}. "]
+	i:["filename","input file name(default:stdin). you can specify multi-file like this '-i file1 -i file2 ..'  or '-- file1 file2 *.txt ..'"]
+	c:"clear contents of unknown tag(default:passthrough)"
+	s:"show contents of unknown tag(default:passthrough)"
+	w:"error on unknown tag(default:paththrough)"
 	f:["string","use <string> as block separator(default:@PARTPIPE@)"]
-	o:["filename","specify destination file name. if input files is more than 1, specify like this -o file1 -o file2 .."]
-	O:["dirname","specify destination dir.input must be file otherwise default name #{stdinWriteFileName} is used. "]
-	i:"don't process indents"
-	c:"clear contents of unknown tag"
-	s:"show contents of unknown tag"
-	w:"error on unknown tag"
+	I:"don't process indents"
 	C:"old mode(partpipe compatible)"
 
-opt.setopt 'hdf::O:icswC'
+try
+	opt.setopt 'hdo:O:i:cswf:IC'
+catch e
+	switch e.type
+		when 'unknown'
+			E "Unknown option:#{e.opt}"
+		when 'required'
+			E "Required parameter for option:#{e.opt}"
+	process.exit 1
+
 opt.getopt (o,p)->
 	switch o
 		when 'h','?'
@@ -44,17 +56,14 @@ opt.getopt (o,p)->
 			debugConsole=console.error
 		when 'f'
 			marker=p[0]
-		when 'i'
+		when 'I'
 			processIndent=false
 		when 'o'
-			targetFiles=p
+			targetFile=p[0]
 		when 'O'
 			targetDir=p[0]
-			try
-				throw {} unless fs.statSync(targetDir)?.isDirectory()==true
-			catch e
-				E "target dir #{targetDir} not found"
-				process.exit 1
+		when 'i'
+			inputFiles=p
 		when 'c'
 			unknownTag='remove'
 		when 's'
@@ -76,7 +85,7 @@ D "unknownTag;:#{unknownTag}"
 D "markReplace:#{markReplace}"
 D "markCommand:#{markCommand}"
 D "targetDir:#{targetDir}"
-D "targetFiles:#{targetFiles}"
+D "targetFile:#{targetFile}"
 
 i=0
 loop
@@ -98,12 +107,21 @@ loop
 				tags[p]='cat'
 
 D "tags:#{JSON.stringify tags}"
+D "reamining args:#{params.slice(i)}"
+if params.slice(i).length>0
+	inputFiles=(inputFiles ? []).concat params.slice(i)
 
-inputFiles=[process.stdin]
-if params.slice(i+1).length>0
-	inputFiles=params.slice i+1
+inputFiles?=[process.stdin]
+D "input files #{(if typeof i!='string' then 'stdin' else i) for i in inputFiles}"
+D "input files #{typeof i for i in inputFiles}"
 
-D "input files #{if typeof i!='string' then 'stdin' else i for i in inputFiles}"
+try
+	throw "use -O <dir> when processing multi-files" if targetFile? inputFiles.length>1
+	throw "-O only works without -o" if targetFile? and targetDir?
+	throw "target dir #{targetDir} not found" if targetDir? and  !(fs.statSync(targetDir)?.isDirectory())
+catch e
+	E e.toString()
+	process.exit 1
 
 D "start processing"
 
@@ -115,7 +133,7 @@ switch command
 		console.log """
 		#{appName} [<options>] [<TAG>=<COMMAND>]... -- files1 files2 ...
 		version #{version}
-		Copyright(c) 2017-2019,kssfilo(https://kanasys.com/gtech/)
+		Copyright(c) 2017-2019,@kssfilo(https://kanasys.com/gtech/)
 
 		Applying unix filter to parts of input stream.
 
@@ -201,7 +219,7 @@ switch command
 		sid2name=(sid)=>
 			x=inputFiles[sid]
 			x='stdin' if typeof x isnt 'string'
-			x
+			path.basename x
 
 		try
 			lineCallback=(sid,line)->inputLines[sid].push line
@@ -215,7 +233,16 @@ switch command
 						tags:tags
 						unknownTag:unknownTag
 					.then (r)->
-						process.stdout.write r
+						if targetDir?
+							dest=path.join(targetDir,sid2name(sid))
+							D "writing #{sid2name(sid)} results to #{dest}.."
+							fs.writeFileSync dest,r
+						else if targetFile
+							D "writing #{sid2name(sid)} results to #{targetFile} .."
+							fs.writeFileSync targetFile,r
+						else
+							D "writing #{sid2name(sid)} results to stdout .."
+							process.stdout.write r
 						streamClosed null,sid
 					.catch (e)->
 						streamClosed "abort:#{sid2name sid}:#{e.toString()}",sid
@@ -248,7 +275,7 @@ switch command
 
 			for input,number in inputFiles
 				D "opening #{if typeof input=='object' then 'stdin' else input}"
-				input=if typeof inputFile is 'string' then fs.createReadStream input else input
+				input=if typeof input is 'string' then fs.createReadStream input else input
 
 				readline=rl.createInterface
 					input:input

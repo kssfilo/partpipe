@@ -1,5 +1,26 @@
 #!/usr/bin/env bats
 
+setup() {
+	mkdir -p test.dir
+}
+
+teardown() {
+	rm -r test.dir
+}
+
+@test "-O directory" {
+	dist/cli.js -O test.dir -i test/c-test3.txt
+	[ "$(cat test.dir/c-test3.txt)" = "Name:hoge aaa" ]
+}
+
+@test "-i file reading by --" {
+	[ "$(dist/cli.js -- test/c-test3.txt)" = "Name:hoge aaa" ]
+}
+
+@test "-i file reading by -i" {
+	[ "$(dist/cli.js -i test/c-test3.txt)" = "Name:hoge aaa" ]
+}
+
 @test "!command" {
 	[ "$(cat test/nt1.txt|dist/cli.js)" = "Name:hello  aaa" ]
 }
@@ -21,7 +42,7 @@
 }
 
 @test "Keeping Indent(off)" {
-	[ "$(cat test/c-test5.txt|dist/cli.js -i|tr "\n" 'x'|tr "\t" 'y')" = "Indent:xApplexBananaxPineapplex" ]
+	[ "$(cat test/c-test5.txt|dist/cli.js -I|tr "\n" 'x'|tr "\t" 'y')" = "Indent:xApplexBananaxPineapplex" ]
 }
 
 @test "Tag" {
