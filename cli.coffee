@@ -30,7 +30,7 @@ optUsages=
 	d:"debug mode"
 	o:["filename","destination file name(default:stdout). use -O in multi-file mode"]
 	O:["dirname","destination dir.file name will be same as input filename or #{stdinWriteFileName}. "]
-	i:["filename","input file name(default:stdin). you can specify multi-file like this '-i file1 -i file2 ..'  or '-- file1 file2 *.txt ..'"]
+	i:["filename","input file name(default:stdin). "]
 	c:"clear contents of unknown tag(default:passthrough)"
 	s:"show contents of unknown tag(default:passthrough)"
 	w:"error on unknown tag(default:paththrough)"
@@ -131,7 +131,7 @@ switch command
 		version=pjson.version ? '-'
 
 		console.log """
-		#{appName} [<options>] [<TAG>=<COMMAND>]... -- files1 files2 ...
+		#{appName} [<options>] [<TAG>=<COMMAND>]... [-- files1 files2 ...]
 		version #{version}
 		Copyright(c) 2017-2019,@kssfilo(https://kanasys.com/gtech/)
 
@@ -140,6 +140,9 @@ switch command
 		# options:
 
 		#{opt.getHelp optUsages}
+
+		you can specify multi-file like this '-i file1 -i file2 ..'  or '-- file1 file2 *.txt ..'
+
 		# example:
 		    >cat example.js
 
