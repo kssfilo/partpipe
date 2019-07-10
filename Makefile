@@ -1,11 +1,11 @@
 .SUFFIXES:
 
 APPNAME=partpipe
-VERSION=0.4.0
+VERSION=1.0.0
 
 #=
 
-COMMANDS=help pack test clean
+COMMANDS=help build pack test clean
 
 #=
 
@@ -20,6 +20,8 @@ TOOLS=node_modules/.bin
 #=
 
 .PHONY:$(COMMANDS)
+
+build:$(TARGETS)
 
 test:$(ALL) test.bats
 	chmod +x dist/cli.js
