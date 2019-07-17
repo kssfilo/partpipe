@@ -3,7 +3,7 @@
 APPNAME=partpipe
 VERSION=1.0.0
 DESCRIPTION=A command line tool,like C-preprocessor/sed/awk/perl.for embedding version/date/any data to template text/source. you can write markdown in part of program code.
-KEYWORDS=sed grep awk perl markdown ruby preprocessor cli command-line command line tool 
+KEYWORDS=preprosessor C sed grep awk perl embed template markdown ruby cli command-line command line tool date
 NODEVER=8
 LICENSE=MIT
 
@@ -49,7 +49,7 @@ test-classic.passed:$(TARGETS)
 pack:$(ALL) test.passed|$(DESTDIR)
 
 clean:
-	-rm -r $(DESTDIR) node_modules *.passd test/c-* test/*.flg 2>/dev/null;true
+	-rm -r $(DESTDIR) testpassed.flg package-lock.json node_modules *.passed test/c-* test/*.flg 2>/dev/null;true
 
 help:
 	@echo "Targets:$(COMMANDS)"

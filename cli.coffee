@@ -224,7 +224,7 @@ switch command
 
 		if tag is start by '|', partpipe also treats it as command line. then inject the block to this stdin. 
 
-		you can write markdown or pug in your program code. offcourse, any unix filter can be used such as sort / uniq.
+		you can write markdown or pug in your program code. off course, any unix filter can be used such as sort / uniq.
 
 		### Specify unix filter or any command in command line
 		

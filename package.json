@@ -27,9 +27,26 @@
     "url": "http://github.com/kssfilo/partpipe.git"
   },
   "homepage": "http://github.com/kssfilo/partpipe.git",
-  "keywords": [],
+  "keywords": [
+    "preprosessor",
+    "C",
+    "sed",
+    "grep",
+    "awk",
+    "perl",
+    "embed",
+    "template",
+    "markdown",
+    "ruby",
+    "cli",
+    "command-line",
+    "command",
+    "line",
+    "tool",
+    "date"
+  ],
   "engines": {
-    "node": ">= 0.4.0"
+    "node": ">= 0.8.0"
   },
   "deprecated": false
 }

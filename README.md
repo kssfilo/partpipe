@@ -4,11 +4,11 @@ A command line tool,like C-preprocessor/sed/awk/perl.for embedding version/date/
 
 Like #ifdef, you can enable/disable parts of template text/source by command line.
 
-Additionally, applying unix filter to parts of input streame. you can write markdown / pug inside your source code.
+Additionally, applying unix filter to parts of input stream. you can write markdown / pug inside your source code.
 
 ## Examples 
 
-### Embeding verion
+### Embedding verion
 
     $ cat example.js 
     console.log("version is @PARTPIPE@VERSION@PARTPIPE@");
@@ -17,7 +17,7 @@ Additionally, applying unix filter to parts of input streame. you can write mark
     $ cat destDir/example.js
     console.log('version is 1.2.0');
 
-### Embeding current date
+### Embedding current date
 
     $ cat LICENSE
     Copyright 2017-@PARTPIPE@!date +Y@PARTPIPE@ Your Name
@@ -40,7 +40,7 @@ Additionally, applying unix filter to parts of input streame. you can write mark
     $ cat expmple.js
     console.log('debug build)'
 
-### Applying unix filter to parts of template
+### Applying unix filter to parts of a template
 
     $ cat example.js
     var html=`
@@ -85,6 +85,7 @@ partpipe(input).then((result)=>console.log(result));
 ## Change Log
 
 - 1.0.x:breaking change! @ and = are swapped on command line/adds -w option/rewriting documents/mitting ; on inline/new separator/-C mode/new debug line/multipule input mode
+- 1.0.x:use -C option(compatible mode) for scripts for 0.x
 - 0.4.x:changes tag format to @PARTPIPE@TAG (@PARTPIPE@=TAG is also ok)
 - 0.4.x:replace with text by command line (TAG@Text)
 - 0.4.x:remove tag content by command line (TAG@)
