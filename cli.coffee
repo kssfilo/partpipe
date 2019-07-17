@@ -13,7 +13,7 @@ processIndent=true
 unknownTag='bypass'
 markReplace="="
 markCommand="@"
-defaultMarker="@@@@@"
+defaultMarker="@PARTPIPE@"
 targetDir=null
 targetFile=null
 inputFiles=null
@@ -36,7 +36,7 @@ optUsages=
 	w:"error on unknown tag(default:paththrough)"
 	f:["string","use <string> as block separator(default:@PARTPIPE@)"]
 	I:"don't process indents"
-	C:"old mode(partpipe compatible)"
+	C:"old mode(ver 0.x.x compatible)"
 
 try
 	opt.setopt 'hdo:O:i:cswf:IC'
@@ -131,21 +131,83 @@ switch command
 		version=pjson.version ? '-'
 
 		console.log """
-		#{appName} [<options>] [<TAG>=<COMMAND>]... [-- files1 files2 ...]
-		version #{version}
-		Copyright(c) 2017-2019,@kssfilo(https://kanasys.com/gtech/)
+		    #{appName} [<options>] [<TAG>[=<replacetext>]]... -O <outputdir> [-- files1 files2 ...]
+		    version #{version}
+		    Copyright(c) 2017-2019,@kssfilo(https://kanasys.com/gtech/)
+		    A command line tool,like C-preprocessor/sed/awk/perl.for embedding version/date/any data to template text/source.
+		
+		    Like #ifdef, you can enable/disable parts of template text/source by command line.
+		
+		    Additionally, applying unix filter to parts of input stream. you can write markdown / pug inside your source code.
 
-		Applying unix filter to parts of input stream.
-
-		# options:
+		## Options
 
 		#{opt.getHelp optUsages}
 
 		you can specify multi-file like this '-i file1 -i file2 ..'  or '-- file1 file2 *.txt ..'
 
-		# example:
-		    >cat example.js
+		## Tags
+		
+		    <TAG>=<replacetext>  replaces @PARTPIPE@<TAG>@PARTPIPE@ with <replacetext>. e.g. 'VERSION=1.2.0' replaces '@PARTPIPE@VERSION@PARTPIPE@'
 
+		    <TAG>  shows   <block> of @PARTPIPE@<TAG>;<block>@PARTPIPE@ e.g. 'DEBUG' replaces '@PARTPIPE@DEBUG;console.log("debug mode")@PARTPIPE@' to 'console.log("debug mode")'
+		    <TAG>= removes <block> of @PARTPIPE@<TAG>;<block>@PARTPIPE@ e.g. 'DEBUG=' replaces '@PARTPIPE@DEBUG;console.log("debug mode")@PARTPIPE@' to ''
+
+		    <TAG>@<command> apply <command> to <block> of @PARTPIPE@TAG;<block>@PARTPIPE@ e.g. "MD@md2html" applys '@PARTPIPE@MD;# title@PARTPIPE@' to '<h1>titile</h1>'
+		    # you can omit <block>. like '@PARTPIPE@DATE@PARTPIPE' in template text and 'DATE@date +%m%d%Y'. in command like. result will be '17/07/2019'
+
+		## Examples
+		
+		### Replace by tag
+
+		    $ cat example.js
+		    console.log("version is @PARTPIPE@VERSION@PARTPIPE@");
+
+		    $ partpipe VERSION=1.2.0 -O destDir/ -- example.js
+		    $ cat destDir/example.js
+		    console.log('version is 1.2.0');
+
+		### Show/Remove by tag like #ifdef
+
+		    $ cat example.js
+		    @PARTPIPE@RELEASE;console.log('release build');@PARTPIPE@
+		    @PARTPIPE@DEBUG;console.log('debug build');@PARTPIPE@
+
+		    $ partpipe RELEASE DEBUG=  -O destDir/ -- example.js
+		    $ cat destDir/example.js
+		    console.log('release build');
+
+		    $ partpipe RELEASE= DEBUG  -O destDir/ -- example.js
+		    $ cat destDir/example.js
+		    console.log('debug build');
+
+		### multi-line
+
+		    $ cat expample.js
+		    @PARTPIPE@RELEASE
+		    console.log('release build')
+		    @PARTPIPE@
+		    @PARTPIPE@DEBUG
+		    console.log('debug build')
+		    @PARTPIPE@
+
+		    $ partpipe RELEASE= DEBUG  -O destDir/ -- example.js
+		    console.log('debug build');
+
+		### Embedding date or any command result
+
+		    $ cat LICENSE
+		    Copyright 2017-@PARTPIPE@!date +Y@PARTPIPE@ Your Name
+
+		    $ partpipe -O destDir/ -- LICENSE
+		    $ cat destDir/LICENSE
+		    Copyright 2017-2019 Your Name
+
+		if tag is start by '!', partpipe treats it as command line. you can embed date or web data(by curl/norl) or everything
+
+		### Applying unix filter to parts of template
+		
+		    $ cat example.js
 		    var html=`
 		    @PARTPIPE@|md2html
 		    # Hello World
@@ -153,25 +215,20 @@ switch command
 		    @PARTPIPE@
 		    `;
 
-		    >cat example.js|partpipe
-
+		    $ partpipe -O destDir/ -- example.js
+		    $ cat destDir/example.js
 		    var html=`
 		    <H1>Hello World</H1>
 		    <p>This is a greeting application.</p>
 		    `;
+
+		if tag is start by '|', partpipe also treats it as command line. then inject the block to this stdin. 
+
+		you can write markdown or pug in your program code. offcourse, any unix filter can be used such as sort / uniq.
+
+		### Specify unix filter or any command in command line
 		
-		# inline:
-		    >cat example.text
-		    
-		    Name: @PARTPIPE@|sed 's/World/Earth/';Hello World@PARTPIPE@
-
-		    >cat example.text|partpipe
-
-		    Name: Hellow Earth
-
-		# tag:(specify filter in command line,remove |):
-		    >cat example.js
-
+		    $ cat example.js
 		    var html=`
 		    @PARTPIPE@MARKDOWN
 		    # Hello World
@@ -179,38 +236,14 @@ switch command
 		    @PARTPIPE@
 		    `;
 
-		    >cat example.js|partpipe 'MARKDOWN=md2html'
-
+		    $ partpipe 'MARKDOWN@md2html' -O destDir -- example.js
+		    $ cat example.js
 		    var html=`
 		    <H1>Hello World</H1>
 		    <p>This is a greeting application.</p>
 		    `;
 
-		# show/remove by tag
-		    >cat example.js
-
-		    @PARTPIPE@RELEASE;console.log('release build');@PARTPIPE@
-		    @PARTPIPE@DEBUG;console.log('debug build');@PARTPIPE@
-
-		    >cat example.js|partpipe -c RELEASE  #-c option:remove unknown tag/<tag>:just show content
-
-		    console.log('release build');
-
-		    >cat example.js|partpipe -c DEBUG
-
-		    console.log('debug build');
-
-		    >cat example.js|partpipe RELESE@ DEBUG  # <tag>@:remove
-
-		    console.log('debug build');
-
-		# replace by tag
-		    >cat example.js
-
-		    console.log("version is @PARTPIPE@VERSION@PARTPIPE@");
-
-		    >cat example.js|partpipe VERSION@1.2.0  #<tag>@<text> replace with <text>
-		    console.log('version is 1.2.0');
+		you can specify filter by command line. embed like normal tag. then add '<TAG>@<commmand>' in partpipe command line.
 
 		"""
 		process.exit 0

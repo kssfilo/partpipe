@@ -20,7 +20,7 @@ partpipe=(input,opt={})->
 	if marker && !checkSeparator marker
 		throw "you can't use '():;' for separator: #{marker}"
 
-	marker?='(?:@@@@@|@PARTPIPE@)'
+	marker?='(?:@PARTPIPE@)'
 
 	D opt,"===starting partpipe process"
 	D opt,"marker:#{marker}"
@@ -66,8 +66,9 @@ partpipe=(input,opt={})->
 
 			D opt,"block:input:"+line
 
-			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}([|=]?)([^;]*)$")
+			m=line.match new RegExp("^([ 	]*)#{escapeRegExp(marker)}([|=!]?)([^;]*)$")
 			throw "Missing block separator for line #{beginningLineno}" if m and m[3] and state is 'buffering'
+			m=null if m?[3].match new RegExp(escapeRegExp(marker)) #if inline, drop it
 
 			D opt,"block:match:"+JSON.stringify m
 
@@ -90,7 +91,7 @@ partpipe=(input,opt={})->
 						throw "Unknown tag '#{m[3]}' found on line #{lineno}.check argument or input syntax or use option about unknown tag. "
 
 			switch
-				when m and state is 'bypass' and m[2] in ['|','=','x']
+				when m and state is 'bypass' and m[2] in ['|','=','x','!']
 					D opt,"block:found beginnning marker at line #{lineno}"
 					state='buffering'
 					commandLine=m[3]

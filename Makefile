@@ -2,6 +2,12 @@
 
 APPNAME=partpipe
 VERSION=1.0.0
+DESCRIPTION=A command line tool,like C-preprocessor/sed/awk/perl.for embedding version/date/any data to template text/source. you can write markdown in part of program code.
+KEYWORDS=sed grep awk perl markdown ruby preprocessor cli command-line command line tool 
+NODEVER=8
+LICENSE=MIT
+
+PKGKEYWORDS=$(shell echo $$(echo $(KEYWORDS)|perl -ape '$$_=join("\",\"",@F)'))
 
 #=
 
@@ -28,12 +34,12 @@ test:test-main.passed
 test.passed:test-main.passed test-classic.passed
 	touch $@
 
-test-main.passed:test/.ready $(TARGETS)
+test-main.passed:test/ready.flg $(TARGETS)
 	./test.bats
 	touch $@
 
-test/.ready:
-	cd $(@D);for i in test*.txt;do cat $$i|perl -pe 's/\@PARTPIPE\@=?/@@@@@/g' >c-$$i;done
+test/ready.flg:
+	cd $(@D);for i in test*.txt;do cat $$i|perl -pe 's/\@PARTPIPE\@=?/\@PARTPIPE\@/g' >c-$$i;done
 	touch $@
 
 test-classic.passed:$(TARGETS)
@@ -43,7 +49,7 @@ test-classic.passed:$(TARGETS)
 pack:$(ALL) test.passed|$(DESTDIR)
 
 clean:
-	-rm -r $(DESTDIR) node_modules *.passd
+	-rm -r $(DESTDIR) node_modules *.passd test/c-* test/*.flg 2>/dev/null;true
 
 help:
 	@echo "Targets:$(COMMANDS)"
@@ -67,10 +73,8 @@ ifndef NC
 endif
 	head -n1 $<|grep '^#!'|sed 's/coffee/node/'  >$@ 
 	cat $<|$(TOOLS)/coffee -bcs >> $@
-ifeq ("$*","cli")
-	chmod +x $@
-endif
-
+	echo $*
+	if test "$*" = "cli"; then chmod +x $@; fi
 
 $(DESTDIR)/%:%|$(DESTDIR)
 	cp $< $@

@@ -1,1 +1,11 @@
-Name:@@@@@!perl -e 'print "hello"'@@@@@ @@@@@!sed -e ' ' ;dontshow@@@@@ aaa
+Name:@PARTPIPE@!perl -e 'print "hello"'@PARTPIPE@@PARTPIPE@!sed -e ' ' ;dontshow@PARTPIPE@ aaa
+
+@PARTPIPE@!perl -e 'print "Multiline"'
+@PARTPIPE@
+
+@PARTPIPE@!sed -e ' '
+dont show
+@PARTPIPE@
+
+@PARTPIPE@!perl -e 'print Hello '@PARTPIPE@
+

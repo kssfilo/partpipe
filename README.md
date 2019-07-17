@@ -1,128 +1,69 @@
-partpipe
-==========
+# partpipe - embedding version/date/any data to template text/source.
 
-Command line tool to apply unix filter to parts of input stream.
+A command line tool,like C-preprocessor/sed/awk/perl.for embedding version/date/any data to template text/source.
 
-```
->cat some.js
+Like #ifdef, you can enable/disable parts of template text/source by command line.
 
-var html=`
-@PARTPIPE@|md2html
-# Hello World
-This is a greeting application.
-@PARTPIPE@
-`;
+Additionally, applying unix filter to parts of input streame. you can write markdown / pug inside your source code.
 
-var text=`
-Colors:
-@PARTPIPE@|sort|uniq
-Blue
-Red
-Green
-Red
-Blue
-@PARTPIPE@
-`;
-```
+## Examples 
 
-```
->cat some.js|partpipe
+### Embeding verion
 
-var html=`
-<h1>Hello World</h1>
+    $ cat example.js 
+    console.log("version is @PARTPIPE@VERSION@PARTPIPE@");
 
-<p>This is a greeting application.</p>
-`;
+    $ partpipe VERSION=1.2.0 -O destDir/ -- example.js
+    $ cat destDir/example.js
+    console.log('version is 1.2.0');
 
-var text=`
-Colors:
-Blue
-Green
-Red
-`;
-```
+### Embeding current date
 
-Able to specify filter in command line (tag mode, remove |)
+    $ cat LICENSE
+    Copyright 2017-@PARTPIPE@!date +Y@PARTPIPE@ Your Name
 
-```
->cat some.js
+    $ partpipe -O destDir/ -- LICENSE
+    $ cat destDir/LICENSE
+    Copyright 2017-2019 Your Name
 
-var html=`
-@PARTPIPE@MARKDOWN
-# Hello World
-This is a greeting application.
-@PARTPIPE@
-`;
-```
+### ifdef / endif like
 
-```
->cat some.js|partpipe 'MARKDOWN=md2html'
+    $ cat expample.js
+    @PARTPIPE@RELEASE
+    console.log('relase build')
+    @PARTPIPE@
+    @PARTPIPE@DEBUG
+    console.log('debug build')
+    @PARTPIPE@
+    
+    $ partpipe RELEASE= DEBUG  -O destDir/ -- example.js
+    $ cat expmple.js
+    console.log('debug build)'
 
-var html=`
-<h1>Hello World</h1>
+### Applying unix filter to parts of template
 
-<p>This is a greeting application.</p>
-`;
-```
+    $ cat example.js
+    var html=`
+    @PARTPIPE@|md2html
+    # Hello World
+    This is a greeting application.
+    @PARTPIPE@
+    `;
 
-Inline
-
-```
->cat example.text
-
-Name: @PARTPIPE@|sed 's/World/Earth/';Hello World@PARTPIPE@
-Date: @PARTPIPE@|date@PARTPIPE@
-Name2: @PARTPIPE@HELLO;Hello World@PARTPIPE@
-
->cat example.text|partpipe 'HELLO=sed "s/Hello/Good Night/"'
-
-Name: Hello Earth
-Date: Sat Apr 29 06:20:08 JST 2017
-Name2: Good Night World
-```
-
-show/remove by tag
-
-```
->cat example.js
-
-@PARTPIPE@RELEASE;console.log('release build');@PARTPIPE@
-@PARTPIPE@DEBUG;console.log('debug build');@PARTPIPE@
-
->cat example.js|partpipe -c RELEASE   #-c option:remove unknown tag/<tag>:just show content
-
-console.log('release build');
-
->cat example.js|partpipe -c DEBUG
-
-console.log('debug build');
-
->cat example.js|partpipe RELESE@ DEBUG # <tag>@:remove
-console.log('debug build');
-```
-
-replace by tag
-
-```
->cat example.js
-
-console.log("version is @PARTPIPE@VERSION@PARTPIPE@");
-
->cat example.js|partpipe VERSION@1.2.0  #<tag>@<text> replace with <text>
-console.log('version is 1.2.0');
-```
+    $ partpipe -O destDir/ -- example.js
+    $ cat destDir/example.js
+    var html=`
+    <H1>Hello World</H1>
+    <p>This is a greeting application.</p>
+    `;
 
 ## Install
 
-```
-sudo npm install -g partpipe
-```
+    sudo npm install -g partpipe
 
 ## Usage
 
-```
 @SEE_NPM_README@
-```
 
 ## Use as module
 
@@ -143,6 +84,7 @@ partpipe(input).then((result)=>console.log(result));
 
 ## Change Log
 
+- 1.0.x:breaking change! @ and = are swapped on command line/adds -w option/rewriting documents/mitting ; on inline/new separator/-C mode/new debug line/multipule input mode
 - 0.4.x:changes tag format to @PARTPIPE@TAG (@PARTPIPE@=TAG is also ok)
 - 0.4.x:replace with text by command line (TAG@Text)
 - 0.4.x:remove tag content by command line (TAG@)

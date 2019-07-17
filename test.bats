@@ -22,7 +22,7 @@ teardown() {
 }
 
 @test "!command" {
-	[ "$(cat test/nt1.txt|dist/cli.js)" = "Name:hello  aaa" ]
+	[ "$(echo $(cat test/nt1.txt|dist/cli.js))" = "Name:hello aaa Multiline" ]
 }
 
 @test "Block Separator" {
